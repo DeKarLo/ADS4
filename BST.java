@@ -1,11 +1,15 @@
-public class BST<K extends Comparable<K>, V> {
+import java.util.AbstractMap;
+import java.util.Iterator;
+import java.util.Map;
+
+public class BST<K extends Comparable<K>, V> implements Iterable<Map.Entry<K, V>>{
     private Node root;
     private class Node
     {
         private K key;
         private V val;
         private int size;
-        private Node left, right;
+        private Node left, right, parent;
         public Node(K key, V val, int size)
         {
             this.key = key;
@@ -26,9 +30,11 @@ public class BST<K extends Comparable<K>, V> {
         int cmp = key.compareTo(n.key);
         if (cmp < 0) {
             n.left = put(n.left, key, val);
+            n.left.parent = n;
         }
         else if (cmp > 0) {
             n.right = put(n.right, key, val);
+            n.right.parent = n;
         }
         else n.val = val;
         n.size++;
@@ -103,12 +109,43 @@ public class BST<K extends Comparable<K>, V> {
             return n.right;
         }
         n.left = deleteMin(n.left);
-        n.size--; // Decrement size of node n
+        n.size--;
         return n;
     }
 
-    public Iterable<K> iterator()
-    {
-        return null;
+    @Override
+    public Iterator<Map.Entry<K, V>> iterator() {
+        return new BSTIterator();
+    }
+
+    private class BSTIterator implements Iterator<Map.Entry<K, V>> {
+        private Node curr = min(root);
+
+        @Override
+        public boolean hasNext() {
+            return curr != null;
+        }
+
+        @Override
+        public Map.Entry<K, V> next() {
+            Map.Entry<K, V> entry = new AbstractMap.SimpleEntry<>(curr.key, curr.val);
+            curr = getNext(curr);
+            return entry;
+        }
+
+        private Node getNext(Node n) {
+            if (n.right != null) {
+                return min(n.right);
+            } else {
+                Node temp = n.parent;
+
+                while (temp != null && n == temp.right) {
+                    n = temp;
+                    temp = temp.parent;
+                }
+
+                return n.parent;
+            }
+        }
     }
 }
